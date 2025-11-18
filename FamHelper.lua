@@ -11,17 +11,31 @@ local window = new.bool()
 local sizeX, sizeY = getScreenResolution()
 local menu = 1
 
-local CURRENT_VERSION = "1.0.0" -- твоя текущая версия
+-- 🔧 текущая версия
+local CURRENT_VERSION = "1.0.3"
 
+-- 🔧 проверка и автообновление
 function checkUpdates()
     lua_thread.create(function()
-        local url = "https://raw.githubusercontent.com/ТВОЙ_НИК/ТВОЙ_РЕПО/main/version.txt"
-        local r, err = requests.get(url)
+        local url_version = "https://raw.githubusercontent.com/MAGINSTER/Family-Helper/refs/heads/main/version.txt"
+        local url_script  = "https://raw.githubusercontent.com/MAGINSTER/Family-Helper/main/FamHelper.lua"
+
+        local r, err = requests.get(url_version)
         if r and r.status_code == 200 then
             local latest = r.text:match("([%d%.]+)")
             if latest and latest ~= CURRENT_VERSION then
                 sampAddChatMessage("[FamilyHelper] Доступна новая версия: "..latest.." (у тебя "..CURRENT_VERSION..")", 0xFF6600)
-                sampAddChatMessage("[FamilyHelper] Скачай обновление с GitHub!", 0xFF6600)
+                sampAddChatMessage("[FamilyHelper] Скачиваю обновление...", 0xFF6600)
+
+                local script, err2 = requests.get(url_script)
+                if script and script.status_code == 200 then
+                    local f = io.open(getGameDirectory().."\\moonloader\\family_helper.lua", "w")
+                    f:write(script.text)
+                    f:close()
+                    sampAddChatMessage("[FamilyHelper] Скрипт обновлён! Перезапусти игру или MoonLoader.", 0x66CCFF)
+                else
+                    sampAddChatMessage("[FamilyHelper] Ошибка загрузки скрипта: "..tostring(err2), 0xFF0000)
+                end
             else
                 sampAddChatMessage("[FamilyHelper] У тебя актуальная версия ("..CURRENT_VERSION..")", 0x66CCFF)
             end
@@ -39,7 +53,7 @@ function main()
     end)
     sampAddChatMessage("[FamilyHelper] Используй /fh для открытия меню", 0x66CCFF)
 
-    -- 🔧 Проверка обновлений при запуске
+    -- 🔧 проверка обновлений при запуске
     checkUpdates()
 
     while true do wait(0) end
@@ -78,18 +92,26 @@ imgui.OnFrame(
 
             if imgui.Button(u8"Пригласить игрока (/faminvite)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/faminvite ")
+                window[0] = false
+                imgui.Process = false
             end
 
             if imgui.Button(u8"Выдать ранг (/frank)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/frank ")
+                window[0] = false
+                imgui.Process = false
             end
 
             if imgui.Button(u8"Выдать варн (/famwarn)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/famwarn ")
+                window[0] = false
+                imgui.Process = false
             end
 
             if imgui.Button(u8"Исключить (/famkick)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/famkick ")
+                window[0] = false
+                imgui.Process = false
             end
         end
 
