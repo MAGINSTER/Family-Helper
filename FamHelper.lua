@@ -11,13 +11,13 @@ local window = new.bool()
 local sizeX, sizeY = getScreenResolution()
 local menu = 1
 
--- рџ”§ С‚РµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ
+-- ?? текущая версия
 local CURRENT_VERSION = "1.0.0"
 
--- РЈРєР°Р¶Рё СЃРІРѕР№ Discord webhook URL
+-- Укажи свой Discord webhook URL
 local DISCORD_WEBHOOK = "https://ptb.discord.com/api/webhooks/1354857024705269960/CWp9MNS4kfHirqURBaOS3-788mw53I_hXkEgmP5XR-M-VKmpVxfqCu0s5oUu801ZTM0N"
 
--- Р¤СѓРЅРєС†РёСЏ РѕС‚РїСЂР°РІРєРё Р»РѕРіР° РІ Discord
+-- Функция отправки лога в Discord
 function logToDiscord(eventType, text)
     lua_thread.create(function()
         local payload = {
@@ -25,12 +25,12 @@ function logToDiscord(eventType, text)
         }
         local r, err = requests.post(DISCORD_WEBHOOK, {json = payload})
         if not r then
-            sampAddChatMessage("[FamilyHelper] РћС€РёР±РєР° Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РІ Discord: "..tostring(err), 0xFF0000)
+            sampAddChatMessage("[FamilyHelper] Ошибка логирования в Discord: "..tostring(err), 0xFF0000)
         end
     end)
 end
 
--- рџ”§ РїСЂРѕРІРµСЂРєР° Рё Р°РІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ
+-- ?? проверка и автообновление
 function checkUpdates()
     lua_thread.create(function()
         local url_version = "https://raw.githubusercontent.com/MAGINSTER/Family-Helper/main/version.txt"
@@ -40,23 +40,23 @@ function checkUpdates()
         if r and r.status_code == 200 then
             local latest = r.text:match("([%d%.]+)")
             if latest and latest ~= CURRENT_VERSION then
-                sampAddChatMessage("[FamilyHelper] Р”РѕСЃС‚СѓРїРЅР° РЅРѕРІР°СЏ РІРµСЂСЃРёСЏ: "..latest.." (Сѓ С‚РµР±СЏ "..CURRENT_VERSION..")", 0xFF6600)
-                sampAddChatMessage("[FamilyHelper] РЎРєР°С‡РёРІР°СЋ РѕР±РЅРѕРІР»РµРЅРёРµ...", 0xFF6600)
+                sampAddChatMessage("[FamilyHelper] Доступна новая версия: "..latest.." (у тебя "..CURRENT_VERSION..")", 0xFF6600)
+                sampAddChatMessage("[FamilyHelper] Скачиваю обновление...", 0xFF6600)
 
                 local script, err2 = requests.get(url_script)
                 if script and script.status_code == 200 then
                     local f = io.open(getGameDirectory().."\\moonloader\\FamHelper.lua", "w")
                     f:write(script.text)
                     f:close()
-                    sampAddChatMessage("[FamilyHelper] РЎРєСЂРёРїС‚ РѕР±РЅРѕРІР»С‘РЅ! РџРµСЂРµР·Р°РїСѓСЃС‚Рё РёРіСЂСѓ РёР»Рё MoonLoader.", 0x66CCFF)
+                    sampAddChatMessage("[FamilyHelper] Скрипт обновлён! Перезапусти игру или MoonLoader.", 0x66CCFF)
                 else
-                    sampAddChatMessage("[FamilyHelper] РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЃРєСЂРёРїС‚Р°: "..tostring(err2), 0xFF0000)
+                    sampAddChatMessage("[FamilyHelper] Ошибка загрузки скрипта: "..tostring(err2), 0xFF0000)
                 end
             else
-                sampAddChatMessage("[FamilyHelper] РЈ С‚РµР±СЏ Р°РєС‚СѓР°Р»СЊРЅР°СЏ РІРµСЂСЃРёСЏ ("..CURRENT_VERSION..")", 0x66CCFF)
+                sampAddChatMessage("[FamilyHelper] У тебя актуальная версия ("..CURRENT_VERSION..")", 0x66CCFF)
             end
         else
-            sampAddChatMessage("[FamilyHelper] РћС€РёР±РєР° РїСЂРѕРІРµСЂРєРё РѕР±РЅРѕРІР»РµРЅРёР№: "..tostring(err), 0xFF0000)
+            sampAddChatMessage("[FamilyHelper] Ошибка проверки обновлений: "..tostring(err), 0xFF0000)
         end
     end)
 end
@@ -67,22 +67,22 @@ function main()
         window[0] = not window[0]
         imgui.Process = window[0]
     end)
-    sampAddChatMessage("[FamilyHelper] РСЃРїРѕР»СЊР·СѓР№ /fh РґР»СЏ РѕС‚РєСЂС‹С‚РёСЏ РјРµРЅСЋ", 0x66CCFF)
+    sampAddChatMessage("[FamilyHelper] Используй /fh для открытия меню", 0x66CCFF)
 
-    -- рџ”§ РїСЂРѕРІРµСЂРєР° РѕР±РЅРѕРІР»РµРЅРёР№ РїСЂРё Р·Р°РїСѓСЃРєРµ
+    -- ?? проверка обновлений при запуске
     checkUpdates()
 
-    -- рџ”§ РїРµСЂРµС…РІР°С‚ СЃРѕРѕР±С‰РµРЅРёР№ СЃРµРјСЊРё
+    -- ?? перехват сообщений семьи
     sampRegisterChatMessageCallback(function(color, text)
-        if text:find("^%[РЎРµРјСЊСЏ %(РќРѕРІРѕСЃС‚Рё%)%]") then
-            if text:find("РїСЂРёРіР»Р°СЃРёР» РІ СЃРµРјСЊСЋ РЅРѕРІРѕРіРѕ С‡Р»РµРЅР°") then
-                logToDiscord("РџСЂРёРіР»Р°С€РµРЅРёРµ", text)
-            elseif text:find("РІС‹РґР°Р» РІР°СЂРЅ") then
-                logToDiscord("Р’Р°СЂРЅ", text)
-            elseif text:find("РёСЃРєР»СЋС‡РёР» РёР· СЃРµРјСЊРё") then
-                logToDiscord("РСЃРєР»СЋС‡РµРЅРёРµ", text)
+        if text:find("^%[Семья %(Новости%)%]") then
+            if text:find("пригласил в семью нового члена") then
+                logToDiscord("Приглашение", text)
+            elseif text:find("выдал варн") then
+                logToDiscord("Варн", text)
+            elseif text:find("исключил из семьи") then
+                logToDiscord("Исключение", text)
             else
-                logToDiscord("РќРѕРІРѕСЃС‚СЊ", text)
+                logToDiscord("Новость", text)
             end
         end
         return false
@@ -102,63 +102,63 @@ imgui.OnFrame(
         imgui.SetNextWindowSize(imgui.ImVec2(500, 400), imgui.Cond.FirstUseEver)
         imgui.Begin("Family Helper", window, imgui.WindowFlags.NoResize)
 
-        -- Р’РєР»Р°РґРєРё
-        if imgui.Button(u8"Р“Р»Р°РІРЅР°СЏ", imgui.ImVec2(100,30)) then menu = 1 end
+        -- Вкладки
+        if imgui.Button(u8"Главная", imgui.ImVec2(100,30)) then menu = 1 end
         imgui.SameLine()
-        if imgui.Button(u8"РќРѕРІРѕСЃС‚Рё", imgui.ImVec2(100,30)) then menu = 2 end
+        if imgui.Button(u8"Новости", imgui.ImVec2(100,30)) then menu = 2 end
         imgui.SameLine()
-        if imgui.Button(u8"РћР±РЅРѕРІР»РµРЅРёСЏ", imgui.ImVec2(100,30)) then menu = 3 end
+        if imgui.Button(u8"Обновления", imgui.ImVec2(100,30)) then menu = 3 end
 
         imgui.Separator()
 
-        -- Р“Р»Р°РІРЅР°СЏ
+        -- Главная
         if menu == 1 then
-            imgui.Text(u8"Р›РёРґРµСЂ СЃРµРјСЊРё: Ilya_Fedyaev")
-            imgui.Text(u8"РўРёРї СЃРµРјСЊРё: Dynasty")
-            imgui.Text(u8"Р—Р°РјРµСЃС‚РёС‚РµР»СЊ 1: Egor_Enotav")
-            imgui.Text(u8"Р—Р°РјРµСЃС‚РёС‚РµР»СЊ 2: David_Dias")
-            imgui.Text(u8"Р—Р°РјРµСЃС‚РёС‚РµР»СЊ 3: РЎР»РѕС‚ РЅРµ РєСѓРїР»РµРЅ")
+            imgui.Text(u8"Лидер семьи: Ilya_Fedyaev")
+            imgui.Text(u8"Тип семьи: Dynasty")
+            imgui.Text(u8"Заместитель 1: Egor_Enotav")
+            imgui.Text(u8"Заместитель 2: David_Dias")
+            imgui.Text(u8"Заместитель 3: Слот не куплен")
 
             imgui.Separator()
-            imgui.Text(u8"Р”РµР№СЃС‚РІРёСЏ СЃРµРјСЊРё:")
+            imgui.Text(u8"Действия семьи:")
 
-            if imgui.Button(u8"РџСЂРёРіР»Р°СЃРёС‚СЊ РёРіСЂРѕРєР° (/faminvite)", imgui.ImVec2(-1,30)) then
+            if imgui.Button(u8"Пригласить игрока (/faminvite)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/faminvite ")
                 window[0] = false
                 imgui.Process = false
             end
 
-            if imgui.Button(u8"Р’С‹РґР°С‚СЊ СЂР°РЅРі (/setfrank)", imgui.ImVec2(-1,30)) then
+            if imgui.Button(u8"Выдать ранг (/setfrank)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/setfrank ")
                 window[0] = false
                 imgui.Process = false
             end
 
-            if imgui.Button(u8"Р’С‹РґР°С‚СЊ РІР°СЂРЅ (/famwarn)", imgui.ImVec2(-1,30)) then
+            if imgui.Button(u8"Выдать варн (/famwarn)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/famwarn ")
                 window[0] = false
                 imgui.Process = false
             end
 
-            if imgui.Button(u8"РСЃРєР»СЋС‡РёС‚СЊ (/famkick)", imgui.ImVec2(-1,30)) then
+            if imgui.Button(u8"Исключить (/famkick)", imgui.ImVec2(-1,30)) then
                 sampSetChatInputText("/famkick ")
                 window[0] = false
                 imgui.Process = false
             end
         end
 
-        -- РќРѕРІРѕСЃС‚Рё
+        -- Новости
         if menu == 2 then
-            imgui.Text(u8"РќРѕРІРѕСЃС‚Рё СЃРµРјСЊРё:")
+            imgui.Text(u8"Новости семьи:")
             imgui.Separator()
-            imgui.Text(u8"РџРѕРєР° РЅРѕРІРѕСЃС‚РµР№ РЅРµС‚.")
+            imgui.Text(u8"Пока новостей нет.")
         end
 
-        -- РћР±РЅРѕРІР»РµРЅРёСЏ
+        -- Обновления
         if menu == 3 then
-            imgui.Text(u8"РћР±РЅРѕРІР»РµРЅРёСЏ Family Helper:")
+            imgui.Text(u8"Обновления Family Helper:")
             imgui.Separator()
-            imgui.Text(u8"РџРѕРєР° РѕР±РЅРѕРІР»РµРЅРёР№ РЅРµС‚.")
+            imgui.Text(u8"Пока обновлений нет.")
         end
 
         imgui.End()
