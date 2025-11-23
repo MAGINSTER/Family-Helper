@@ -12,7 +12,7 @@ local sizeX, sizeY = getScreenResolution()
 local menu = 1
 
 -- ?? текуща€ верси€
-local CURRENT_VERSION = "1.0.0"
+local CURRENT_VERSION = "1.0.4"
 
 -- ”кажи свой Discord webhook URL
 local DISCORD_WEBHOOK = "https://ptb.discord.com/api/webhooks/1354857024705269960/CWp9MNS4kfHirqURBaOS3-788mw53I_hXkEgmP5XR-M-VKmpVxfqCu0s5oUu801ZTM0N"
