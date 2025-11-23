@@ -12,12 +12,28 @@ local sizeX, sizeY = getScreenResolution()
 local menu = 1
 
 -- 🔧 текущая версия
-local CURRENT_VERSION = "1.0.3"
+local CURRENT_VERSION = "1.0.0"
+
+-- Укажи свой Discord webhook URL
+local DISCORD_WEBHOOK = "https://ptb.discord.com/api/webhooks/1354857024705269960/CWp9MNS4kfHirqURBaOS3-788mw53I_hXkEgmP5XR-M-VKmpVxfqCu0s5oUu801ZTM0N"
+
+-- Функция отправки лога в Discord
+function logToDiscord(eventType, text)
+    lua_thread.create(function()
+        local payload = {
+            content = string.format("[FamilyHelper] [%s] %s", eventType, text)
+        }
+        local r, err = requests.post(DISCORD_WEBHOOK, {json = payload})
+        if not r then
+            sampAddChatMessage("[FamilyHelper] Ошибка логирования в Discord: "..tostring(err), 0xFF0000)
+        end
+    end)
+end
 
 -- 🔧 проверка и автообновление
 function checkUpdates()
     lua_thread.create(function()
-        local url_version = "https://raw.githubusercontent.com/MAGINSTER/Family-Helper/refs/heads/main/version.txt"
+        local url_version = "https://raw.githubusercontent.com/MAGINSTER/Family-Helper/main/version.txt"
         local url_script  = "https://raw.githubusercontent.com/MAGINSTER/Family-Helper/main/FamHelper.lua"
 
         local r, err = requests.get(url_version)
@@ -29,7 +45,7 @@ function checkUpdates()
 
                 local script, err2 = requests.get(url_script)
                 if script and script.status_code == 200 then
-                    local f = io.open(getGameDirectory().."\\moonloader\\family_helper.lua", "w")
+                    local f = io.open(getGameDirectory().."\\moonloader\\FamHelper.lua", "w")
                     f:write(script.text)
                     f:close()
                     sampAddChatMessage("[FamilyHelper] Скрипт обновлён! Перезапусти игру или MoonLoader.", 0x66CCFF)
@@ -55,6 +71,22 @@ function main()
 
     -- 🔧 проверка обновлений при запуске
     checkUpdates()
+
+    -- 🔧 перехват сообщений семьи
+    sampRegisterChatMessageCallback(function(color, text)
+        if text:find("^%[Семья %(Новости%)%]") then
+            if text:find("пригласил в семью нового члена") then
+                logToDiscord("Приглашение", text)
+            elseif text:find("выдал варн") then
+                logToDiscord("Варн", text)
+            elseif text:find("исключил из семьи") then
+                logToDiscord("Исключение", text)
+            else
+                logToDiscord("Новость", text)
+            end
+        end
+        return false
+    end)
 
     while true do wait(0) end
 end
@@ -96,8 +128,8 @@ imgui.OnFrame(
                 imgui.Process = false
             end
 
-            if imgui.Button(u8"Выдать ранг (/frank)", imgui.ImVec2(-1,30)) then
-                sampSetChatInputText("/frank ")
+            if imgui.Button(u8"Выдать ранг (/setfrank)", imgui.ImVec2(-1,30)) then
+                sampSetChatInputText("/setfrank ")
                 window[0] = false
                 imgui.Process = false
             end
